@@ -14,6 +14,11 @@ enemies = []
 enemy_y=-200
 player_y=400
 player_height=200
+gameover=False
+font_1=pygame.font.SysFont('Comic Sans MS',50)
+font_2=pygame.font.SysFont('Comic Sans MS',40)
+score=0
+score_font=pygame.font.SysFont('Comic Sans MS',30)
 #player_x=flag*lane_width-(lane_width+player_width)/2
 screen = pygame.display.set_mode((screen_width,screen_height))
 background_image=pygame.image.load('road.png').convert()
@@ -27,10 +32,11 @@ def bkmovement(road_x,road_y,screen,road_image,screen_height):# to change backgr
         screen.blit(background_image,(road_x,rel_y))
     road_y=road_y+10
     return road_y
-def car_collision(enemies,player_height,player_y,flag):
+def car_collision(enemies,player_height,player_y,flag,gameover):
     for enemy in enemies:
         if enemy[2]==flag and enemy[1]+player_height>=player_y:
-            print('collision')
+            gameover=True
+            return gameover
 def generate_enemies(enemy_y,lane_width,enemies,car_width):
     flag = random.randrange(1,4,1)
     enemies.append([int(flag * lane_width - (lane_width + car_width)/2),enemy_y,flag])
@@ -41,17 +47,53 @@ def enemy_movement(enemies,game_screen,enemy_img):
         game_screen.blit(enemy_img,(enemy[0],enemy[1]))
         enemy[1]+=10
 
-def splice_enemies(enemies):
+def splice_enemies(enemies,score):
     for enemy in enemies:
         if enemy[1]>=600:
             index_enemy=enemies.index(enemy)
             enemies.pop(index_enemy)
-    return enemies
+            score+=1
+    return (enemies,score)
+
+
+def game_over_screen(screen,font_1,font_2):
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    waiting = False
+
+        screen.fill((0,0,0))
+        game_over_message=font_1.render('Game Over',False,(255,255,255))
+        click_to_try_again=font_2.render('Press space bar to try again',False,(255,255,255))
+        score_display = score_font.render("Score:{}".format(score),False,(255,255,255))
+        screen.blit(score_display,(700,100))
+        screen.blit(game_over_message,(300,100))
+        screen.blit( click_to_try_again,(200,300))
+        pygame.display.update()
+
 
 running=True
 
 while running:
-    car_collision(enemies,player_height,player_y,flag)
+    gameover=True if car_collision(enemies,player_height,player_y,flag,gameover) else False
+    if gameover:
+        time.sleep(0.5)
+        game_over_screen(screen,font_1,font_2)
+        stat_time=time.time()
+        enemies=[]
+        x=0
+        y=0
+        player_x=403
+        player_y=400
+        enemy_y=-200
+        flag=2
+        gameover=False
+        time.sleep(0.5)
+        score=0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running=False
@@ -75,6 +117,8 @@ while running:
         generate_enemies(enemy_y,lane_width,enemies,car_width)
     y=bkmovement(x,y,screen,background_image,screen_height)
     screen.blit(front_image,(player_x,player_y))
+    score_display = score_font.render("Score:{}".format(score),False,(255,255,255))
+    screen.blit(score_display,(700,100))
     enemy_movement(enemies,screen,enemy_image)
     pygame.display.update()
-    enemies=splice_enemies(enemies)
+    enemies,score=splice_enemies(enemies,score)
