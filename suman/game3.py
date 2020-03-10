@@ -21,9 +21,9 @@ gameover = False
 score = 0
 #background_img = pygame.image.load('road.png')
 screen = pygame.display.set_mode((screen_width,screen_height))
-background_img = pygame.image.load('/Users/suman/Desktop/road.png')
-player_img = pygame.image.load('/Users/suman/Desktop/game_sprite.png')
-enemy_img = pygame.image.load('/Users/suman/Desktop/enemy.png')
+background_img = pygame.image.load('/Users/suman/Desktop/Python/suman/road.png')
+player_img = pygame.image.load('/Users/suman/Desktop/Python/suman/game_sprite.png')
+enemy_img = pygame.image.load('/Users/suman/Desktop/Python/suman/enemy.png')
 def move_background(road_x,road_y,screen_height,screen,road_img):
     rel_y=road_y%screen_height
     #print("rel_y {}".format(rel_y))
