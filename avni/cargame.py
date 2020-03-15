@@ -1,6 +1,7 @@
 import pygame
 import time
 import random
+import winsound
 pygame.init()
 x=0
 start_time=time.time()
@@ -18,6 +19,7 @@ gameover=False
 font_1=pygame.font.SysFont('Comic Sans MS',50)
 font_2=pygame.font.SysFont('Comic Sans MS',40)
 score=0
+winsound.PlaySound("background_track",winsound.SND_ASYNC)
 score_font=pygame.font.SysFont('Comic Sans MS',30)
 #player_x=flag*lane_width-(lane_width+player_width)/2
 screen = pygame.display.set_mode((screen_width,screen_height))
@@ -30,12 +32,14 @@ def bkmovement(road_x,road_y,screen,road_image,screen_height):# to change backgr
     screen.blit(background_image,(road_x,rel_y-screen_height))
     if rel_y<screen_height:
         screen.blit(background_image,(road_x,rel_y))
-    road_y=road_y+10
+    road_y=road_y+5
     return road_y
 def car_collision(enemies,player_height,player_y,flag,gameover):
     for enemy in enemies:
         if enemy[2]==flag and enemy[1]+player_height>=player_y:
             gameover=True
+            pygame.mixer.music.load("hit.wav");
+            pygame.mixer.music.play(0)
             return gameover
 def generate_enemies(enemy_y,lane_width,enemies,car_width):
     flag = random.randrange(1,4,1)
@@ -45,7 +49,7 @@ def enemy_movement(enemies,game_screen,enemy_img):
     if len(enemies)<=0: return
     for enemy in enemies:
         game_screen.blit(enemy_img,(enemy[0],enemy[1]))
-        enemy[1]+=10
+        enemy[1]+=5
 
 def splice_enemies(enemies,score):
     for enemy in enemies:
@@ -53,10 +57,12 @@ def splice_enemies(enemies,score):
             index_enemy=enemies.index(enemy)
             enemies.pop(index_enemy)
             score+=1
+            pygame.mixer.music.load("point.wav")
+            pygame.mixer.music.play(0)
     return (enemies,score)
 
 
-def game_over_screen(screen,font_1,font_2):
+def game_over_screen(screen,font_1,font_2,score,score_font,highscore):
     waiting = True
     while waiting:
         for event in pygame.event.get():
@@ -67,13 +73,17 @@ def game_over_screen(screen,font_1,font_2):
                     waiting = False
 
         screen.fill((0,0,0))
-        game_over_message=font_1.render('Game Over',False,(255,255,255))
+        game_over_message=font_1.render('Game Over',False,(255,0,0))
         click_to_try_again=font_2.render('Press space bar to try again',False,(255,255,255))
         score_display = score_font.render("Score:{}".format(score),False,(255,255,255))
+        high_score = score_font.render("Highscore:{}".format(highscore),False,(255,255,255))
         screen.blit(score_display,(700,100))
         screen.blit(game_over_message,(300,100))
         screen.blit( click_to_try_again,(200,300))
+        screen.blit(high_score,(300,200))
         pygame.display.update()
+        winsound.PlaySound(None,winsound.SND_ASYNC)
+
 
 
 running=True
@@ -82,7 +92,15 @@ while running:
     gameover=True if car_collision(enemies,player_height,player_y,flag,gameover) else False
     if gameover:
         time.sleep(0.5)
-        game_over_screen(screen,font_1,font_2)
+        f=open('score.txt','r+')
+        f.seek(0)
+        d=f.read()
+        highscore=0 if not d else d
+        if(int(highscore)<=score):
+            highscore=score
+            f.seek(0)
+            f.write(str(score))
+        game_over_screen(screen,font_1,font_2,score,score_font,highscore)
         stat_time=time.time()
         enemies=[]
         x=0
@@ -94,6 +112,7 @@ while running:
         gameover=False
         time.sleep(0.5)
         score=0
+        winsound.PlaySound("background_track",winsound.SND_ASYNC);
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running=False
